@@ -1,0 +1,80 @@
+library(randomForest) 
+library(pROC) 
+library(dplyr)
+library(multiROC)
+library(ggplot2)
+library(caret) 
+library(creditmodel)
+library(tidyverse)
+library(limma)
+
+setwd("D:/")
+
+train_data=read.csv("train-19-UTF8.csv",fileEncoding = "UTF-8",header = TRUE, sep = ",", stringsAsFactors = FALSE)
+test_data=read.csv("test1-19-UTF8.csv",fileEncoding = "UTF-8",header = TRUE, sep = ",", stringsAsFactors = FALSE)
+test_data3=read.csv("test2-19-UTF8.csv",fileEncoding = "UTF-8",header = TRUE, sep = ",", stringsAsFactors = FALSE)
+all=read.csv("train+test1.csv",fileEncoding = "UTF-8",header = TRUE, sep = ",", stringsAsFactors = FALSE)
+ 
+train_data$Label<-as.factor(train_data$Label)
+test_data$Label<-as.factor(test_data$Label)
+test_data3$Label<-as.factor(test_data3$Label)
+all$Label<-as.factor(all$Label)
+
+train_data=train_data[,-1]
+test_data=test_data[,-1]
+test_data3=test_data3[,-1]
+all=all[,-1]
+
+set.seed(123)
+mode3 <-randomForest(Label~.,
+                     data=train_data,ntree=500,mtry=4,importance=TRUE,proximity=TRUE)
+
+predict.prob <- predict(mode3,newdata = test_data)
+
+rbf.pred2_GC<-ifelse(predict.prob=="GC","GC","Others")
+test_data_GC=test_data
+test_data_GC$Label<-ifelse(test_data_GC$Label=="GC","GC","Others")
+rbf.pred2_GC=as.factor(rbf.pred2_GC)
+rbf.pred2_GC=as.numeric(rbf.pred2_GC)
+roc.prob.svm_GC <- roc(test_data_GC$Label,rbf.pred2_GC)
+plot(roc.prob.svm_GC,print.auc=TRUE,auc.polygon=TRUE, grid=c(0.1, 0.2),grid.col=c("green", "red"), max.auc.polygon=TRUE,auc.polygon.col="skyblue",legacy.axes=T, print.thres=TRUE)
+
+rbf.pred2_PD<-ifelse(predict.prob=="PD","PD","Others")
+test_data_PD=test_data
+test_data_PD$Label<-ifelse(test_data_PD$Label=="PD","PD","Others")
+rbf.pred2_PD=as.factor(rbf.pred2_PD)
+rbf.pred2_PD=as.numeric(rbf.pred2_PD)
+roc.prob.svm_PD <- roc(test_data_PD$Label,rbf.pred2_PD)
+plot(roc.prob.svm_PD,print.auc=TRUE,auc.polygon=TRUE, grid=c(0.1, 0.2),grid.col=c("green", "red"), max.auc.polygon=TRUE,auc.polygon.col="skyblue",legacy.axes=T, print.thres=TRUE)
+
+rbf.pred2_HC<-ifelse(predict.prob=="HC","HC","Others")
+test_data_HC=test_data
+test_data_HC$Label<-ifelse(test_data_HC$Label=="HC","HC","Others")
+rbf.pred2_HC=as.factor(rbf.pred2_HC)
+rbf.pred2_HC=as.numeric(rbf.pred2_HC)
+roc.prob.svm_HC <- roc(test_data_HC$Label,rbf.pred2_HC)
+plot(roc.prob.svm_HC,print.auc=TRUE,auc.polygon=TRUE, grid=c(0.1, 0.2),grid.col=c("green", "red"), max.auc.polygon=TRUE,auc.polygon.col="skyblue",legacy.axes=T, print.thres=TRUE)
+
+caret::confusionMatrix(as.factor(predict.prob),as.factor(test_data$Label))
+cft.Logistic <-table(test_data$Label,predict.prob,dnn=c("True","Predict"))
+cft.Logistic
+TP1 <- cft.Logistic[1, 1]
+FP1 <- cft.Logistic[3, 1]+cft.Logistic[2, 1]
+FN1 <- cft.Logistic[1, 2]+cft.Logistic[1, 3]
+print(precision1 <- TP1 / (TP1 + FP1))
+print(Recall1 <- TP1 / (TP1 + FN1))
+print(F1_1 <- 2*(Recall1*precision1)/(Recall1+precision1))
+
+TP2 <- cft.Logistic[2, 2]
+FP2 <- cft.Logistic[1, 2]+cft.Logistic[3, 2]
+FN2 <- cft.Logistic[2, 1]+cft.Logistic[2, 3]
+print(precision2 <- TP2 / (TP2 + FP2))
+print(Recall2 <- TP2 / (TP2 + FN2))
+print(F1_2 <- 2*(Recall2*precision2)/(Recall2+precision2))
+
+TP3 <- cft.Logistic[3, 3]
+FP3 <- cft.Logistic[1, 3]+cft.Logistic[2, 3]
+FN3<- cft.Logistic[3, 1]+cft.Logistic[3, 2]
+print(precision3 <- TP3 / (TP3 + FP3))
+print(Recall3 <- TP3 / (TP3 + FN3))
+print(F1_3 <- 2*(Recall3*precision3)/(Recall3+precision3))

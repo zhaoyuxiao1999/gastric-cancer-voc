@@ -1,0 +1,28 @@
+BiocManager::install('mixOmics')
+library(mixOmics)
+library(ggplot2)
+t2=read.csv("",header = TRUE, sep = ",", stringsAsFactors = FALSE)
+t2$Label<-as.factor(t2$Label)
+X=t2[, 3:54]
+#X <- scale(X) 
+Y=t2$Label
+plsda.datatm <-plsda(X, Y, ncomp = 3)
+plotIndiv(plsda.datatm, ind.names = FALSE, legend=TRUE,ellipse = F, title="sPLS-DA",group = t2$Label,
+          cex =2.5,pch =21,size.xlabel = 15, size.ylabel = 15)
+plotIndiv(plsda.datatm, ind.names = FALSE, legend=TRUE,ellipse = F)
+vip_values <- vip(plsda.datatm)
+important_vars <- rownames(vip_values[vip_values[, 1] > 1, ])
+X_filtered <- X[, colnames(X) %in% important_vars]
+plsda.datatm <- plsda(X_filtered, Y, ncomp = 3)
+plotIndiv(plsda.datatm, ind.names = FALSE, legend = TRUE, ellipse = FALSE,
+          title = "sPLS-DA", group = t2$Label,
+          cex = 3, pch = c(21, 22, 23)[as.numeric(t2$Label)],
+          col = c("red", "blue", "green"),
+          size.xlabel = 15, size.ylabel = 15)
+selected_vars <- selectVar(plsda.datatm)
+print(selected_vars)
+perf_model <- perf(plsda.datatm, validation = "Mfold", folds = 5, nrepeat = 10)
+plot(perf_model)
+library(mixOmics)
+vip_values <- vip(plsda.datatm)
+print(vip_values)

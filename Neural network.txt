@@ -1,0 +1,13 @@
+library(neuralnet)
+set.seed(123)
+net1=neuralnet(Label~ ., data=train_data,hidden = 2,)
+plot(net1)
+net1$result.matrix
+
+net1_predict2=predict(net1,test_data,type="prob") 
+prediction2=c("GC","PD","HC")[apply(net1_predict2,1,which.max)]
+prediction2
+
+caret::confusionMatrix(as.factor(prediction2),as.factor(test_data$Label))
+cft.Logistic <-table(test_data$Label,prediction2,dnn=c("True","Predict"))
+cft.Logistic

@@ -1,0 +1,13 @@
+library(multiROC)
+library(VIM)
+library(magrittr)
+library(PerformanceAnalytics)
+train_control=trainControl(method='cv',number=10)
+
+nb_model=train(Label~ .,data=train_data,trControl=train_control,method='nb')
+nb_predict <- predict(nb_model,newdata = test_data,type = "raw")
+
+caret::confusionMatrix(as.factor(nb_predict),as.factor(test_data$Label))
+cft.Logistic=table(test_data$Label,nb_predict,dnn=c("True","Predict"))
+cft.Logistic
+

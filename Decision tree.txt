@@ -1,0 +1,17 @@
+library(rpart)  
+library(rpart.plot) 
+set.seed(123)
+tree1 <- rpart(Label~ .,data=train_data, control=rpart.control(cp=.0001))
+best <- tree1$cptable[which.min(tree1$cptable[,"xerror"]),"CP"]
+pruned_tree <- prune(tree1, cp=best)
+prp(pruned_tree,
+    faclen=0,   
+    extra=1,    
+    roundint=F, 
+    digits=5)    
+rpart.plot(pruned_tree,type=2)
+dt_predict <- predict(pruned_tree,newdata = test_data,type = "class")
+
+caret::confusionMatrix(as.factor(dt_predict),as.factor(test_data$Label))
+cft.Logistic <-table(test_data$Label,dt_predict,dnn=c("True","Predict"))
+cft.Logistic

@@ -1,0 +1,41 @@
+library(e1071) 
+set.seed(123)
+#control <- trainControl(method = "cv", number = 10)
+rbf.tune=tune.svm(Label ~ .,
+                  data=train_data,kernel="radial",probability = T,
+                  gama=c(0.1,0.5,1,2,3,4),
+                  tunecontrol = tune.control(cross = 10)) 
+
+performances <- rbf.tune$performances
+print(performances)
+rbf.tune$best.performance
+summary(rbf.tune)
+best_gamma <- rbf.tune$best.model$gamma  
+print(best_gamma)
+best.rbf=rbf.tune$best.model
+best.rbf
+rbf.pred=predict(best.rbf,newdata=test_data)
+
+caret::confusionMatrix(as.factor(rbf.pred),as.factor(test_data$Label))
+cft.Logistic <-table(test_data$Label,rbf.pred,dnn=c("True","Predict"))
+cft.Logistic
+
+##Importance
+set.seed(123)
+fit.svm <- train(train_data[,2:17], train_data[,1], "svmRadialWeights", trControl = trainControl(method = "cv",number = 10))
+fit.svm
+t1=varImp(fit.svm)  
+t1
+library(ggplot2)
+data=read.csv("")
+p1=ggplot(data,aes(x=data$Mean.Importance,y=reorder(data$X,data$Mean.Importance)))  p1+geom_bar(position = position_dodge(),
+            width = 0.5,
+            stat = "identity",   #identity提取横坐标x对应的y值
+            fill="steelblue")+labs(y=NULL)+labs(x="MeanDecreaseGini")+
+  theme_light()+ theme_bw() +
+  theme(panel.grid=element_blank())
+
+
+
+
+
